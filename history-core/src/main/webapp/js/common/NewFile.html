@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	你好
+</body>
+
+<script type="text/javascript">
+tr();
+function ts (s) {
+	var s = hello,world ;
+	alert(s);
+	var news="";
+	var arr = s.split("");
+	
+	for(var i=arr.length;i>0;i--){
+		news+=arr[i-1];
+	}
+	alert(news);
+	
+}
+function td (s) {
+	var f=fso.OpenTextFile("aaa.txt"); //这里必须为绝对路径
+	alert(f);
+	var a = [2,2,3,4,3,1,2,5,7] ;
+	var newa = [] ;
+	
+	alert(a);
+	
+	var j = 0
+	for(var i=0;i<a.length;i++){
+		if(newa.indexOf(a[i])<0){
+			newa[j]=a[i];
+			j++;
+		}
+	}
+	
+	alert(newa);
+	
+}
+function tr (X) {
+	X=1175;
+	var s = X.toString(2);
+	
+	return s
+	
+}
+
+</script>
+</html>

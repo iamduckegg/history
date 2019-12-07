@@ -1,0 +1,1 @@
+document.write('<link href="../layui/css/layui.css" rel="stylesheet" type="text/css">');

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/tx
+		http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+>
+    <!-- 配置securityManager -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="cacheManager" ref="cacheManager" />
+        <!-- 对应自定义的Realm的bean,单个realm配置方式 -->
+        <!-- <property name="realm" ref="myRealm"/> -->
+        <!-- 多个realm的配置方式一,将realms属性写在authenticator的bean中 -->
+        <property name="authenticator" ref="authenticator"></property>
+        
+        <!-- 多realms的方式二,将realms属性写在securityManager的bean中 -->
+        <property name="realms">
+			<list>
+				<ref bean="majorRealm" />
+				<ref bean="minorRealm" />
+			</list>
+		</property>
+		<!-- 会话管理 -->
+		<property name="sessionManager"  ref="sessionManager"></property>
+        <!-- session -->
+        <!-- <property name="sessionMode" value="native"/> -->
+    </bean>
+
+    <!-- 配置缓存管理器 -->
+    <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <!-- 指定 ehcache 的配置文件 -->
+        <property name="cacheManagerConfigFile" value="classpath:ehcache.xml"/>
+    </bean>
+	<!-- session管理配置bean -->
+	<bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+		<!-- session有效时间,单位毫秒 -->
+		<property name="globalSessionTimeout" value="3000000"/>
+		<!--删除无效session  -->
+		<property name="deleteInvalidSessions"  value="true"/>
+	</bean>
+
+	<!-- 多realm配置 -->
+	<bean id="authenticator" class="org.apache.shiro.authc.pam.ModularRealmAuthenticator">
+		<!-- <property name="realms">
+			<list>
+				<ref bean="authenticationRealm" />
+				<ref bean="authorizationRealm" />
+			</list>
+		</property> -->
+		<!-- 认证策略 共三种 -->
+		<property name="authenticationStrategy">
+			<!-- 一个realm验证成功即可,返回成功结果 -->
+			<!-- <bean class="org.apache.shiro.authc.pam.FirstSuccessfulStrategy"></bean> -->
+			<!-- 一个realm验证成功即可,返回所有结果 -->
+			<bean class="org.apache.shiro.authc.pam.AtLeastOneSuccessfulStrategy"></bean>
+			<!-- 所有realm验证成功才可以,返回所有结果 -->
+			<!-- <bean class="org.apache.shiro.authc.pam.AllSuccessfulStrategy"></bean> -->
+		</property>
+	</bean>
+    <!-- 配置进行授权和认证的 Realm 手写一个realm类 -->
+    <bean id="majorRealm" class="com.history.shiro.MajorRealm">
+    	<property name="credentialsMatcher">
+    		<bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+    			<!-- 加密方式 -->
+    			<property name="hashAlgorithmName" value="MD5"></property>
+    			<!-- 加密次数 -->
+    			<property name="hashIterations" value="1024"></property>
+    		</bean>
+    	</property>
+    </bean>
+    
+    <!-- 第二个realm -->
+    <bean id="minorRealm" class="com.history.shiro.MinorRealm">
+    	<property name="credentialsMatcher">
+    		<bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+    			<!-- 加密方式 -->
+    			<property name="hashAlgorithmName" value="SHA1"></property>
+    			<!-- 加密次数 -->
+    			<property name="hashIterations" value="1024"></property>
+    		</bean>
+    	</property>
+    </bean>
+
+    <!-- Bean的后置处理器: 自动调用 Spring IOC 中的 shiro bean 的生命周期方法. -->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <!-- 启用IOC容器的shiro注解 必须依赖lifecycleBeanPostProcessor -->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor" >
+        <property name="proxyTargetClass" value="true" />
+    </bean>
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+
+    <!-- 启用shrio授权注解拦截方式  id与web.xml的shiro过滤器的filter-name一致-->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!-- 装配 securityManager -->
+        <property name="securityManager" ref="securityManager"/>
+        <!-- 配置登陆页面 -->
+        <property name="loginUrl" value="/login"/>
+        <!-- 登陆成功后的一面 -->
+        <property name="successUrl" value="/index"/>
+        <!-- 没有权限的页面 -->
+        <property name="unauthorizedUrl" value="/login"/>
+        <!-- 自定义的url过滤器Map -->
+        <!-- <property name="filterChainDefinitionMap" ref="filterChainDefinitionMap"></property> -->
+        
+        
+        <!-- 具体配置需要拦截哪些 URL, 以及访问对应的 URL 时使用 Shiro 的什么 Filter 进行拦截.  -->
+        <!-- 
+        <property name="filterChainDefinitions">
+        -->
+            <!-- anon:匿名 authc:认证 有先后顺序,否则会覆盖-->
+		<!--  
+            <value>
+            /login = anon
+            /login/doLogin = anon
+            /login/doLogout = logout
+            
+            #	给页面资源分配角色	
+            /system/** = roles [admin]
+            
+            /** = authc
+            </value>
+        </property>
+		-->
+    </bean>
+    
+    
+    <!-- 实例工厂,用来创建Bean,配合自定义的url过滤器Map -->
+    <bean id="filterChainDefinitionMap" factory-bean="filterChainDefinitionsBuilder" factory-method="createFilterChainDefinitionMap"></bean>
+    <!-- 创建Map的bean -->
+    <bean id="filterChainDefinitionsBuilder" class="com.history.shiro.FilterChainDefinitionsBuilder"></bean>
+
+</beans>
