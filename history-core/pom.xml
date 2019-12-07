@@ -213,24 +213,6 @@
 		  <version>${shiro.version}</version>
 	  </dependency>
 
-
-<!-- https://mvnrepository.com/artifact/org.objectweb.asm/com.springsource.org.objectweb.asm -->
-<dependency>
-    <groupId>org.objectweb.asm</groupId>
-    <artifactId>com.springsource.org.objectweb.asm</artifactId>
-    <version>3.2.0</version>
-</dependency>
-<!-- https://mvnrepository.com/artifact/org.objectweb.asm/com.springsource.org.objectweb.asm.util -->
-<dependency>
-    <groupId>org.objectweb.asm</groupId>
-    <artifactId>com.springsource.org.objectweb.asm.util</artifactId>
-    <version>3.2.0</version>
-</dependency>
-
-
-
-
-
   </dependencies>
   
   <build>
